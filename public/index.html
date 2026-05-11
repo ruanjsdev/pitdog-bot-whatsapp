@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pits Dog - Pedidos WhatsApp</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <h1>Pits Dog</h1>
+          <p>Painel simples para testar pedidos e avisos no WhatsApp.</p>
+        </div>
+        <div class="status" id="botStatus">Conferindo conexao...</div>
+      </section>
+
+      <section class="grid">
+        <form class="panel" id="orderForm">
+          <h2>Novo pedido</h2>
+          <label>
+            PIN do painel
+            <input name="pin" type="password" placeholder="1234" autocomplete="current-password">
+          </label>
+          <label>
+            Nome do cliente
+            <input name="customerName" placeholder="Maria">
+          </label>
+          <label>
+            WhatsApp do cliente
+            <input name="customerPhone" placeholder="91999999999" required>
+          </label>
+          <label>
+            Observacao geral
+            <textarea name="notes" rows="2" placeholder="Ex: entregar sem buzinar"></textarea>
+          </label>
+          <section class="cartBox">
+            <div class="listHeader compact">
+              <h2>Carrinho</h2>
+              <strong id="cartTotal">R$ 0,00</strong>
+            </div>
+            <div class="cartItems" id="cartItems"></div>
+          </section>
+          <button type="submit">Criar pedido e avisar</button>
+          <p class="feedback" id="feedback"></p>
+        </form>
+
+        <section class="panel">
+          <h2>Cardapio</h2>
+          <div class="menu" id="menu"></div>
+        </section>
+
+        <section class="panel ordersPanel">
+          <div class="listHeader">
+            <h2>Pedidos</h2>
+            <button type="button" class="secondary" id="refreshButton">Atualizar</button>
+          </div>
+          <div class="orders" id="orders"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

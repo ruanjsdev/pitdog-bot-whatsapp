@@ -1,0 +1,299 @@
+:root {
+  color-scheme: light;
+  font-family: Arial, sans-serif;
+  background: #f5f1ea;
+  color: #241f1a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.shell {
+  width: min(1280px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 22px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 34px;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+.topbar p {
+  margin-top: 6px;
+  color: #6b6259;
+}
+
+.status {
+  min-width: 210px;
+  border: 1px solid #d8cec1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fffaf3;
+  font-weight: 700;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 390px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.panel {
+  border: 1px solid #d8cec1;
+  border-radius: 8px;
+  background: #fffaf3;
+  padding: 18px;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: #4b443d;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+input,
+textarea,
+button {
+  width: 100%;
+  border-radius: 6px;
+  font: inherit;
+}
+
+input,
+textarea {
+  border: 1px solid #cfc4b7;
+  padding: 10px;
+  background: #fff;
+}
+
+button {
+  border: 0;
+  padding: 11px 12px;
+  background: #1d6f42;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button.secondary {
+  width: auto;
+  background: #4e443a;
+}
+
+.ordersPanel {
+  grid-column: 2;
+}
+
+.feedback {
+  min-height: 20px;
+  color: #5d5248;
+}
+
+.listHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.listHeader.compact {
+  margin-bottom: 10px;
+}
+
+.cartBox {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e4d8ca;
+  padding-top: 12px;
+}
+
+.cartItems,
+.menu {
+  display: grid;
+  gap: 12px;
+}
+
+.cartItem {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #e1d6ca;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+.cartItem.selected {
+  border-color: #1d6f42;
+  box-shadow: 0 0 0 2px rgba(29, 111, 66, 0.12);
+}
+
+.cartItem > div:first-of-type {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cartItem ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #6b6259;
+  font-size: 14px;
+}
+
+.cartSelect {
+  justify-self: start;
+  width: auto;
+  padding: 6px 9px;
+  background: #4e443a;
+  font-size: 12px;
+}
+
+.cartControls {
+  display: grid;
+  grid-template-columns: 40px 40px 1fr;
+  gap: 8px;
+}
+
+.cartControls button {
+  min-height: 34px;
+  padding: 7px;
+  background: #724c21;
+}
+
+.itemObs {
+  padding: 8px;
+}
+
+.menuSection {
+  display: grid;
+  gap: 8px;
+}
+
+.menuSection h3 {
+  margin: 0;
+  color: #241f1a;
+  font-size: 16px;
+}
+
+.menuItems {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.menuItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 9px 10px;
+  background: #fff;
+  border: 1px solid #dfd5ca;
+  color: #241f1a;
+  text-align: left;
+}
+
+.menuItem:hover {
+  border-color: #724c21;
+}
+
+.menuItem span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.menuItem strong {
+  color: #c6461a;
+  white-space: nowrap;
+}
+
+.orders {
+  display: grid;
+  gap: 10px;
+}
+
+.order {
+  border: 1px solid #dfd5ca;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.order strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.orderMeta {
+  color: #6b6259;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actions button {
+  min-height: 40px;
+  padding: 8px;
+  background: #724c21;
+  font-size: 13px;
+}
+
+@media (max-width: 820px) {
+  .topbar,
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .ordersPanel {
+    grid-column: auto;
+  }
+
+  .menuItems {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "pits-dog-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "Bot de WhatsApp do Pit's Dog",
+  "main": "src/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "health": "node -e \"fetch('http://localhost:' + (process.env.PORT || 3001) + '/health').then(r => r.json()).then(console.log)\""
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^7.0.0-rc10",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pino": "^10.3.1",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
