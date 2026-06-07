@@ -2,6 +2,7 @@ export const ORDER_EVENTS = {
   created: 'pedido_criado',
   approved: 'pedido_aprovado',
   preparing: 'preparando',
+  ready: 'pronto',
   outForDelivery: 'saiu_entrega',
   finished: 'finalizado',
   canceled: 'cancelado',
@@ -16,6 +17,7 @@ const EVENT_ALIASES = new Map([
   ['created', ORDER_EVENTS.created],
   ['pending', ORDER_EVENTS.created],
   ['received', ORDER_EVENTS.created],
+  ['aguardando_aprovacao', ORDER_EVENTS.created],
 
   ['pedido_aprovado', ORDER_EVENTS.approved],
   ['aprovado', ORDER_EVENTS.approved],
@@ -23,11 +25,17 @@ const EVENT_ALIASES = new Map([
   ['approved', ORDER_EVENTS.approved],
   ['confirmed', ORDER_EVENTS.approved],
   ['accepted', ORDER_EVENTS.approved],
+  ['aprovado', ORDER_EVENTS.approved],
 
   ['preparando', ORDER_EVENTS.preparing],
   ['em_preparo', ORDER_EVENTS.preparing],
   ['preparing', ORDER_EVENTS.preparing],
   ['in_preparation', ORDER_EVENTS.preparing],
+
+  ['pronto', ORDER_EVENTS.ready],
+  ['ready', ORDER_EVENTS.ready],
+  ['pronto_retirada', ORDER_EVENTS.ready],
+  ['pronto_para_retirada', ORDER_EVENTS.ready],
 
   ['saiu_entrega', ORDER_EVENTS.outForDelivery],
   ['saiu_para_entrega', ORDER_EVENTS.outForDelivery],
@@ -35,12 +43,14 @@ const EVENT_ALIASES = new Map([
   ['out_for_delivery', ORDER_EVENTS.outForDelivery],
   ['delivery', ORDER_EVENTS.outForDelivery],
   ['dispatched', ORDER_EVENTS.outForDelivery],
+  ['saiu_para_entrega', ORDER_EVENTS.outForDelivery],
 
   ['finalizado', ORDER_EVENTS.finished],
   ['entregue', ORDER_EVENTS.finished],
   ['delivered', ORDER_EVENTS.finished],
   ['finished', ORDER_EVENTS.finished],
   ['completed', ORDER_EVENTS.finished],
+  ['finalizado', ORDER_EVENTS.finished],
 
   ['cancelado', ORDER_EVENTS.canceled],
   ['cancelled', ORDER_EVENTS.canceled],

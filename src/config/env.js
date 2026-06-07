@@ -9,4 +9,5 @@ export const env = {
   countryCode: process.env.WHATSAPP_COUNTRY_CODE || '55',
   messageIntervalMs: Number(process.env.MESSAGE_INTERVAL_MS || 1200),
   storePhone: process.env.STORE_PHONE || '',
+  adminOrigin: process.env.ADMIN_ORIGIN || '*',
 };

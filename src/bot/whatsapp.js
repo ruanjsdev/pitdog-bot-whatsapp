@@ -5,11 +5,13 @@ import makeWASocket, {
 } from '@whiskeysockets/baileys';
 import fs from 'node:fs/promises';
 import { Boom } from '@hapi/boom';
-import qrcode from 'qrcode-terminal';
+import qrcodeTerminal from 'qrcode-terminal';
+import QRCode from 'qrcode';
 import pino from 'pino';
 import { env } from '../config/env.js';
 import { normalizePhoneCandidates } from '../utils/phone.js';
 import { createMessageQueue } from '../utils/queue.js';
+import { handleIncomingMessage } from './greetingHandler.js';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -19,6 +21,11 @@ let sock = null;
 let connected = false;
 let reconnecting = false;
 let resettingSession = false;
+let latestQrCode = '';
+let latestQrCodeDataUrl = '';
+let latestQrCodeAt = '';
+let connectedAt = '';
+let disconnectedAt = '';
 
 const queue = createMessageQueue({
   intervalMs: env.messageIntervalMs,
@@ -84,17 +91,32 @@ export async function startWhatsapp() {
 
   sock.ev.on('creds.update', saveCreds);
 
+  // Escuta mensagens recebidas
+  sock.ev.on('messages.upsert', async (m) => {
+    await handleIncomingMessage(sock, m);
+  });
+
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
+      latestQrCode = qr;
+      latestQrCodeAt = new Date().toISOString();
+      latestQrCodeDataUrl = await QRCode.toDataURL(qr, {
+        errorCorrectionLevel: 'M',
+        margin: 1,
+        scale: 8,
+      });
       logger.info('Escaneie o QR Code abaixo pelo WhatsApp do numero da loja.');
-      qrcode.generate(qr, { small: true });
+      qrcodeTerminal.generate(qr, { small: true });
     }
 
     if (connection === 'open') {
       connected = true;
       reconnecting = false;
+      connectedAt = new Date().toISOString();
+      latestQrCode = '';
+      latestQrCodeDataUrl = '';
       logger.info('WhatsApp conectado.');
     }
 
@@ -102,6 +124,7 @@ export async function startWhatsapp() {
       connected = false;
       reconnecting = false;
       sock = null;
+      disconnectedAt = new Date().toISOString();
 
       const code = getDisconnectCode(lastDisconnect);
 
@@ -121,7 +144,12 @@ export async function startWhatsapp() {
 export function getBotStatus() {
   return {
     connected,
+    connectedAt,
+    disconnectedAt,
     hasSocket: Boolean(sock),
+    lastQrAt: latestQrCodeAt,
+    qrCode: latestQrCode,
+    qrCodeDataUrl: latestQrCodeDataUrl,
     queuedMessages: queue.size(),
     sessionDir: env.sessionDir,
   };
