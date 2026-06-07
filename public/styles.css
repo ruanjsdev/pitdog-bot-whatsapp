@@ -297,3 +297,56 @@ button.secondary {
     grid-template-columns: 1fr;
   }
 }
+
+.qrcodeModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.qrcodeModal[style*="display: flex"] {
+  display: flex !important;
+}
+
+.qrcodeBox {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.qrcodeBox h2 {
+  margin-bottom: 12px;
+  color: #241f1a;
+}
+
+.qrcodeBox p {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+#qrcodeContainer {
+  padding: 30px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 2px dashed #ddd;
+}
+
+#qrcodeImage {
+  max-width: 300px;
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+

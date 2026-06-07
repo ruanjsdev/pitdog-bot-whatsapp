@@ -272,6 +272,36 @@ async function loadHealth() {
   const response = await fetch('/health');
   const data = await response.json();
   botStatus.textContent = data.bot.connected ? 'WhatsApp conectado' : 'WhatsApp desconectado';
+  
+  if (!data.bot.connected) {
+    await loadQRCode();
+  } else {
+    document.querySelector('#qrcodeModal').style.display = 'none';
+  }
+}
+
+async function loadQRCode() {
+  try {
+    const response = await fetch('/api/qrcode');
+    const data = await response.json();
+    
+    if (data.qrCodeDataUrl && !data.connected) {
+      const modal = document.querySelector('#qrcodeModal');
+      const img = document.querySelector('#qrcodeImage');
+      const timeEl = document.querySelector('#qrcodeTime');
+      
+      img.src = data.qrCodeDataUrl;
+      
+      if (data.lastQrAt) {
+        const date = new Date(data.lastQrAt);
+        timeEl.textContent = date.toLocaleTimeString('pt-BR');
+      }
+      
+      modal.style.display = 'flex';
+    }
+  } catch (error) {
+    console.warn('Erro ao buscar QR code:', error);
+  }
 }
 
 menuEl.addEventListener('click', (event) => {
@@ -374,3 +404,7 @@ renderMenu();
 renderCart();
 await loadHealth();
 await loadOrders();
+
+setInterval(async () => {
+  await loadHealth();
+}, 3000);

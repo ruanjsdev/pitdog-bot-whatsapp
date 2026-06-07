@@ -43,6 +43,17 @@ export function createHttpServer() {
     });
   });
 
+  app.get('/api/qrcode', (_req, res) => {
+    const status = getBotStatus();
+    res.json({
+      ok: true,
+      qrCodeDataUrl: status.qrCodeDataUrl,
+      qrCode: status.qrCode,
+      lastQrAt: status.lastQrAt,
+      connected: status.connected,
+    });
+  });
+
   app.get('/api/bot/status', requireAdminPin, (_req, res) => {
     res.json({
       ok: true,
