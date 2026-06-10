@@ -1,6 +1,6 @@
 import { env } from '../config/env.js';
 import { enqueueMessage } from '../bot/whatsapp.js';
-import { buildOrderMessage } from './templates.js';
+import { buildOrderMessage, buildPixPaymentMessages, isPixOrder } from './templates.js';
 import { normalizeOrderEvent } from './events.js';
 
 function normalizeOrder(order) {
@@ -12,6 +12,9 @@ function normalizeOrder(order) {
     customerName: order.customerName || order.nomeCliente || '',
     customerPhone: order.customerPhone || order.telefoneCliente || order.phone || order.telefone,
     items: order.items || order.itens || [],
+    payment: order.payment || order.formaPagamento || order.paymentMethod || order.metodoPagamento || order.pagamento,
+    delivery: order.delivery || order.tipoPedido || order.fulfillment || order.entrega,
+    pixKey: order.pixKey || order.chavePix,
     total: order.total ?? order.valorTotal,
   };
 }
@@ -38,10 +41,23 @@ export async function notifyOrderEvent(event, order) {
 
   await enqueueMessage(normalizedOrder.customerPhone, message);
 
+  let pixMessagesSent = 0;
+
+  if (normalizedEvent === 'pedido_criado' && isPixOrder(normalizedOrder)) {
+    const pixMessages = await buildPixPaymentMessages(normalizedOrder);
+
+    for (const pixMessage of pixMessages) {
+      await enqueueMessage(normalizedOrder.customerPhone, pixMessage);
+      pixMessagesSent += 1;
+    }
+  }
+
   return {
     event: normalizedEvent,
     originalEvent: event,
     phone: normalizedOrder.customerPhone,
     message,
+    pixMessageSent: pixMessagesSent > 0,
+    pixMessagesSent,
   };
 }

@@ -43,6 +43,22 @@
             <input name="customerPhone" placeholder="91999999999" required>
           </label>
           <label>
+            Tipo do pedido
+            <select name="delivery">
+              <option value="Delivery">Entrega</option>
+              <option value="Retirada">Retirada</option>
+              <option value="Mesa">Mesa</option>
+            </select>
+          </label>
+          <label>
+            Pagamento
+            <select name="payment">
+              <option value="Pix">PIX</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão">Cartão</option>
+            </select>
+          </label>
+          <label>
             Observacao geral
             <textarea name="notes" rows="2" placeholder="Ex: entregar sem buzinar"></textarea>
           </label>

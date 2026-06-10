@@ -15,15 +15,23 @@ export function createHttpServer() {
 
   app.use((req, res, next) => {
     const requestOrigin = req.get('origin');
-    const allowedOrigin = env.adminOrigin === '*' ? requestOrigin || '*' : env.adminOrigin;
+    const allowsAnyOrigin = env.adminOrigins.includes('*');
+    const allowedOrigin = allowsAnyOrigin
+      ? requestOrigin || '*'
+      : env.adminOrigins.includes(requestOrigin)
+        ? requestOrigin
+        : '';
 
-    res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+    if (allowedOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+    }
+
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-pin, x-bot-token, Authorization');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
 
     if (req.method === 'OPTIONS') {
-      res.sendStatus(204);
+      res.sendStatus(allowedOrigin ? 204 : 403);
       return;
     }
 
@@ -33,8 +41,8 @@ export function createHttpServer() {
   app.use(express.json({ limit: '256kb' }));
   app.use(express.static(path.resolve('public')));
 
-  // Rotas de Configuração do Bot (Mensagens, Link, etc)
-  app.use('/api/settings', settingsRoutes);
+  // Rotas de configuração do bot usadas pelo painel admin.
+  app.use('/api/settings', requireAdminPin, settingsRoutes);
 
   app.get('/health', (_req, res) => {
     res.json({

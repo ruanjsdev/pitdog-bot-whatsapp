@@ -6,7 +6,7 @@ Bot simples em Node.js usando Baileys para avisar clientes sobre o status do ped
 
 ## Requisitos
 
-- Node.js 20 ou superior.
+- Node.js 22 recomendado. Rode `nvm use` nesta pasta antes de iniciar.
 - Um numero de WhatsApp da loja.
 - Backend/site/painel capaz de chamar uma URL HTTP quando o pedido mudar de status.
 
@@ -22,9 +22,14 @@ Edite o `.env` e troque principalmente:
 ```env
 BOT_API_TOKEN=um-token-grande-e-secreto
 STORE_PHONE=5591999999999
+ADMIN_PIN=1234
+ADMIN_ORIGIN=http://localhost:5173,http://localhost:5174,http://localhost:5175
 ```
 
 Se voce for usar apenas o painel local, o `BOT_API_TOKEN` pode ficar vazio por enquanto. Ele so sera necessario quando outro sistema/backend chamar o bot.
+O `ADMIN_PIN` deve ser o mesmo configurado no painel admin e, se voce testar o site chamando o bot localmente, tambem no site.
+O `ADMIN_ORIGIN` aceita varias URLs separadas por virgula.
+A chave PIX fica salva pelo painel admin em `Caixa e relatórios > PIX do estabelecimento` e e gravada em `data/settings.json`.
 
 ## Rodar e conectar pelo QR Code
 
@@ -69,7 +74,7 @@ Nesse painel voce consegue:
 - marcar como `saiu_entrega`;
 - finalizar ou cancelar.
 
-Os pedidos ficam salvos em `data/orders.json`. Isso e simples e serve para comecar/testar. Quando o site e o painel administrativo reais existirem, eles podem chamar a rota `POST /events/order`.
+Os pedidos ficam salvos em `data/orders.json`. Isso e simples e serve para comecar/testar. Quando o backend oficial estiver em uso, ele deve chamar a rota `POST /events/order`.
 
 ## Integração com o site oficial
 
@@ -80,6 +85,7 @@ docs/backend-integration.md
 ```
 
 Essa integracao usa `POST /events/order` com `Authorization: Bearer <BOT_API_TOKEN>`.
+Evite colocar `BOT_API_TOKEN` em front-end publico; em producao, o site cria o pedido no backend e o backend avisa o bot.
 
 ## Como o backend chama o bot
 
@@ -106,9 +112,19 @@ Eventos aceitos:
 - `pedido_criado`
 - `pedido_aprovado`
 - `preparando`
+- `pronto`
 - `saiu_entrega`
 - `finalizado`
 - `cancelado`
+
+Fluxo atual de mensagens:
+
+1. Quando o pedido chega, envie `pedido_criado`. O bot manda a mensagem de recebimento.
+2. Se o pagamento for PIX, o bot manda uma segunda mensagem separada com a chave PIX cadastrada no caixa do painel admin.
+3. Quando o caixa aprovar, envie `pedido_aprovado`. Essa mensagem ja informa que o pedido foi aprovado e entrou em preparo.
+4. Para entrega, envie `saiu_entrega` quando o pedido sair.
+5. Para retirada ou mesa, envie `pronto` quando estiver aguardando retirada/chamada.
+6. Ao finalizar, envie `finalizado`.
 
 ## Exemplo no backend Node/Express
 

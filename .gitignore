@@ -3,4 +3,5 @@ node_modules/
 auth/
 .wwebjs_auth/
 logs/
+data/settings.json
 npm-debug.log*

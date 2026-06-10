@@ -18,10 +18,10 @@ router.post('/', async (req, res) => {
   try {
     const newSettings = req.body;
     // Aqui você pode adicionar validações se quiser
-    await saveSettings(newSettings);
+    const settings = await saveSettings(newSettings);
     
     console.log('[API] Configurações atualizadas via painel.');
-    res.json({ message: 'Configurações salvas com sucesso!', settings: newSettings });
+    res.json({ message: 'Configurações salvas com sucesso!', settings });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao salvar configurações' });
   }

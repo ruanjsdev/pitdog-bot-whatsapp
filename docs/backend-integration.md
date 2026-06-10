@@ -119,15 +119,25 @@ O backend pode mandar em português:
 - `pedido_criado`
 - `pedido_aprovado`
 - `preparando`
+- `pronto`
 - `saiu_entrega`
 - `finalizado`
 - `cancelado`
+
+Fluxo recomendado:
+
+1. `pedido_criado`: pedido recebido. Se `order.payment`, `order.formaPagamento` ou campo equivalente for PIX, o bot envia uma segunda mensagem separada com a chave PIX cadastrada no painel.
+2. `pedido_aprovado`: pedido aprovado pelo caixa e ja em preparo.
+3. `saiu_entrega`: use somente para delivery.
+4. `pronto`: use para retirada ou mesa quando o pedido estiver aguardando cliente/chamada.
+5. `finalizado`: pedido concluido.
 
 Também aceita aliases comuns:
 
 - `created`, `received`, `pending`
 - `approved`, `confirmed`, `accepted`
 - `preparing`, `in_preparation`
+- `ready`, `pronto_retirada`, `pronto_para_retirada`
 - `out_for_delivery`, `delivery`, `dispatched`
 - `delivered`, `finished`, `completed`
 - `canceled`, `cancelled`

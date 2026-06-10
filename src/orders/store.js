@@ -50,6 +50,8 @@ export async function createOrder(input) {
     code: input.code || id.slice(-5),
     customerName: input.customerName || '',
     customerPhone: input.customerPhone,
+    delivery: input.delivery || input.tipoPedido || input.fulfillment || '',
+    payment: input.payment || input.formaPagamento || input.paymentMethod || '',
     total: calculatedTotal || input.total || '',
     items,
     notes: input.notes || '',

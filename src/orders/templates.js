@@ -65,9 +65,45 @@ function buildTotalLine(order) {
   return total ? `\n\n💰 Total: ${total}` : '';
 }
 
+function normalizeText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+export function isPixOrder(order) {
+  const payment = normalizeText(
+    order.payment ||
+      order.formaPagamento ||
+      order.paymentMethod ||
+      order.metodoPagamento ||
+      order.pagamento ||
+      ''
+  );
+
+  return payment.includes('pix');
+}
+
 export async function buildGreetingMessage() {
   const settings = await getSettings();
   return formatGreeting(settings);
+}
+
+export async function buildPixPaymentMessages(order) {
+  const settings = await getSettings();
+  const pixKey = String(order.pixKey || order.chavePix || settings.pixKey || '').trim();
+
+  if (!pixKey) return [];
+
+  const receiver = String(settings.pixReceiverName || settings.botName || 'Pits Dog').trim();
+  const total = formatMoney(order.total ?? order.valorTotal ?? order.totalValue);
+
+  return [
+    `💳 Pagamento via PIX\n\nRecebedor:\n${receiver}\n\nNa próxima mensagem vou enviar somente a chave PIX para facilitar copiar e colar.`,
+    pixKey,
+    total ? `Valor do PIX: ${total}\n\nApós realizar o pagamento, envie o comprovante por aqui para o caixa conferir.` : 'Após realizar o pagamento, envie o comprovante por aqui para o caixa conferir.',
+  ];
 }
 
 export function buildOrderMessage(event, order) {
@@ -80,13 +116,13 @@ export function buildOrderMessage(event, order) {
       `🍔 Olá${customerName}! Recebemos seu pedido no Pits Dog.${itemsSummary}${totalLine}\n\n⏳ Seu pedido está aguardando análise e aprovação do caixa.\nAssim que for confirmado, avisamos por aqui. 😉`,
 
     [ORDER_EVENTS.approved]:
-      '✅ Seu pedido foi confirmado pelo caixa!\n\nDaqui a pouco avisaremos quando entrar em preparo.',
+      '✅ Seu pedido foi aprovado pelo caixa e já está em preparo!\n\nEstamos caprichando por aqui. Daqui a pouco avisaremos a próxima etapa.',
 
     [ORDER_EVENTS.preparing]:
-      '👨‍🍳 Seu pedido entrou em preparo!\n\nEstamos caprichando por aqui. Daqui a pouco avisaremos a próxima etapa.',
+      '👨‍🍳 Seu pedido está em preparo!\n\nAssim que avançar, avisamos por aqui.',
 
     [ORDER_EVENTS.ready]:
-      '🍟 Seu pedido está pronto!\n\nPode retirar no balcão ou aguarde nossa equipe chamar, conforme combinado.',
+      '🍟 Seu pedido está pronto!\n\nPode retirar no balcão ou aguardar nossa equipe chamar, conforme combinado.',
 
     [ORDER_EVENTS.outForDelivery]:
       '🛵 Seu pedido saiu para entrega!\n\n📍 Fique atento no endereço informado, por gentileza.',
