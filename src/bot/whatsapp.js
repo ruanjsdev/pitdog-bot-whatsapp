@@ -26,6 +26,7 @@ let latestQrCodeDataUrl = '';
 let latestQrCodeAt = '';
 let connectedAt = '';
 let disconnectedAt = '';
+const pendingUntilConnectedJobs = [];
 
 const queue = createMessageQueue({
   intervalMs: env.messageIntervalMs,
@@ -74,6 +75,18 @@ function reconnect(delayMs = 3000) {
   }, delayMs);
 }
 
+function flushPendingUntilConnectedJobs() {
+  if (!connected || !sock || pendingUntilConnectedJobs.length === 0) return;
+
+  const jobs = pendingUntilConnectedJobs.splice(0);
+
+  logger.info({ count: jobs.length }, 'WhatsApp conectado. Reenfileirando mensagens pendentes.');
+
+  jobs.forEach((job) => {
+    queue.add(job);
+  });
+}
+
 export async function startWhatsapp() {
   if (reconnecting) return;
   reconnecting = true;
@@ -118,6 +131,7 @@ export async function startWhatsapp() {
       latestQrCode = '';
       latestQrCodeDataUrl = '';
       logger.info('WhatsApp conectado.');
+      flushPendingUntilConnectedJobs();
     }
 
     if (connection === 'close') {
@@ -151,6 +165,7 @@ export function getBotStatus() {
     qrCode: latestQrCode,
     qrCodeDataUrl: latestQrCodeDataUrl,
     queuedMessages: queue.size(),
+    pendingMessages: pendingUntilConnectedJobs.length,
     sessionDir: env.sessionDir,
   };
 }
@@ -208,6 +223,7 @@ export function enqueueMessage(phone, message, options = {}) {
 
   let attempts = 0;
   let settled = false;
+  let waitingForConnection = false;
 
   return new Promise((resolve, reject) => {
     const resolveOnce = (value) => {
@@ -224,6 +240,7 @@ export function enqueueMessage(phone, message, options = {}) {
 
     const job = async () => {
       attempts += 1;
+      waitingForConnection = false;
 
       try {
         await sendMessage(phone, message);
@@ -233,9 +250,29 @@ export function enqueueMessage(phone, message, options = {}) {
           sent: true,
         });
       } catch (error) {
-        const shouldRetry =
-          (retryUntilConnected && isDisconnectedError(error)) ||
-          attempts < maxAttempts;
+        if (retryUntilConnected && isDisconnectedError(error)) {
+          if (!waitingForConnection) {
+            waitingForConnection = true;
+            pendingUntilConnectedJobs.push(job);
+          }
+
+          logger.warn(
+            { attempts, err: error, pendingMessages: pendingUntilConnectedJobs.length, phone },
+            'Mensagem aguardando WhatsApp reconectar.'
+          );
+
+          if (!waitForDelivery) {
+            resolveOnce({
+              attempts,
+              queued: true,
+              sent: false,
+            });
+          }
+
+          return;
+        }
+
+        const shouldRetry = attempts < maxAttempts;
 
         if (shouldRetry) {
           logger.warn(
@@ -246,14 +283,6 @@ export function enqueueMessage(phone, message, options = {}) {
           setTimeout(() => {
             queue.add(job);
           }, env.messageRetryMs);
-
-          if (!waitForDelivery) {
-            resolveOnce({
-              attempts,
-              queued: true,
-              sent: false,
-            });
-          }
 
           return;
         }
