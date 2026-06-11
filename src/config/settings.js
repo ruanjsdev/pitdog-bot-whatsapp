@@ -18,11 +18,9 @@ function normalizeSettings(settings) {
     ...defaultSettings,
     ...settings,
   };
-  const menuLink = String(mergedSettings.menuLink || '').trim();
-
   return {
     ...mergedSettings,
-    menuLink: !menuLink || menuLink === 'https://pitsdog.com.br' ? officialMenuLink : menuLink,
+    menuLink: officialMenuLink,
     pixKey: String(mergedSettings.pixKey || '').trim() || defaultSettings.pixKey,
     pixReceiverName: String(mergedSettings.pixReceiverName || '').trim() || defaultSettings.pixReceiverName,
   };
@@ -48,5 +46,7 @@ export async function saveSettings(newSettings) {
 }
 
 export function formatGreeting(settings) {
-  return settings.greetingMessage.replace('{{menu_link}}', settings.menuLink);
+  const normalizedSettings = normalizeSettings(settings);
+
+  return normalizedSettings.greetingMessage.replace('{{menu_link}}', normalizedSettings.menuLink);
 }
