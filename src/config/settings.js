@@ -2,10 +2,11 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const settingsPath = path.resolve('data', 'settings.json');
+const officialMenuLink = "https://pitsdog-cardapio-oficial.onrender.com";
 
 const defaultSettings = {
   greetingMessage: "🍟 *Bem-vindo ao Pits Dog!* 🍔\n\nOlá! Que bom ter você por aqui.\n\nPara agilizar seu atendimento, você pode dar uma olhada em nosso cardápio e fazer seu pedido diretamente por este link:\n📍 {{menu_link}}\n\nSe precisar de ajuda, é só chamar! 😉",
-  menuLink: "https://pitsdog.com.br",
+  menuLink: officialMenuLink,
   greetingCooldownHours: 4,
   botActive: true,
   pixKey: "41172968000182",
@@ -17,9 +18,11 @@ function normalizeSettings(settings) {
     ...defaultSettings,
     ...settings,
   };
+  const menuLink = String(mergedSettings.menuLink || '').trim();
 
   return {
     ...mergedSettings,
+    menuLink: !menuLink || menuLink === 'https://pitsdog.com.br' ? officialMenuLink : menuLink,
     pixKey: String(mergedSettings.pixKey || '').trim() || defaultSettings.pixKey,
     pixReceiverName: String(mergedSettings.pixReceiverName || '').trim() || defaultSettings.pixReceiverName,
   };
