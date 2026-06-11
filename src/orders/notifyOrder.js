@@ -39,16 +39,21 @@ export async function notifyOrderEvent(event, order) {
     throw new Error(`Sem template para o evento ${event}.`);
   }
 
-  await enqueueMessage(normalizedOrder.customerPhone, message);
+  const queueOptions = {
+    retryUntilConnected: true,
+    waitForDelivery: false,
+  };
 
-  let pixMessagesSent = 0;
+  await enqueueMessage(normalizedOrder.customerPhone, message, queueOptions);
+
+  let pixMessagesQueued = 0;
 
   if (normalizedEvent === 'pedido_criado' && isPixOrder(normalizedOrder)) {
     const pixMessages = await buildPixPaymentMessages(normalizedOrder);
 
     for (const pixMessage of pixMessages) {
-      await enqueueMessage(normalizedOrder.customerPhone, pixMessage);
-      pixMessagesSent += 1;
+      await enqueueMessage(normalizedOrder.customerPhone, pixMessage, queueOptions);
+      pixMessagesQueued += 1;
     }
   }
 
@@ -57,7 +62,9 @@ export async function notifyOrderEvent(event, order) {
     originalEvent: event,
     phone: normalizedOrder.customerPhone,
     message,
-    pixMessageSent: pixMessagesSent > 0,
-    pixMessagesSent,
+    queued: true,
+    pixMessageSent: pixMessagesQueued > 0,
+    pixMessagesSent: pixMessagesQueued,
+    pixMessagesQueued,
   };
 }

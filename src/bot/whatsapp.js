@@ -195,15 +195,86 @@ export async function sendMessage(phone, message) {
   throw lastError || new Error(`Nao foi possivel enviar mensagem para ${phone}.`);
 }
 
-export function enqueueMessage(phone, message) {
+function isDisconnectedError(error) {
+  return error instanceof Error && error.message.includes('WhatsApp ainda nao esta conectado');
+}
+
+export function enqueueMessage(phone, message, options = {}) {
+  const {
+    maxAttempts = 1,
+    retryUntilConnected = false,
+    waitForDelivery = true,
+  } = options;
+
+  let attempts = 0;
+  let settled = false;
+
   return new Promise((resolve, reject) => {
-    queue.add(async () => {
+    const resolveOnce = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
+
+    const rejectOnce = (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    };
+
+    const job = async () => {
+      attempts += 1;
+
       try {
         await sendMessage(phone, message);
-        resolve();
+        resolveOnce({
+          attempts,
+          queued: false,
+          sent: true,
+        });
       } catch (error) {
-        reject(error);
+        const shouldRetry =
+          (retryUntilConnected && isDisconnectedError(error)) ||
+          attempts < maxAttempts;
+
+        if (shouldRetry) {
+          logger.warn(
+            { attempts, err: error, phone, retryInMs: env.messageRetryMs },
+            'Mensagem mantida na fila para nova tentativa.'
+          );
+
+          setTimeout(() => {
+            queue.add(job);
+          }, env.messageRetryMs);
+
+          if (!waitForDelivery) {
+            resolveOnce({
+              attempts,
+              queued: true,
+              sent: false,
+            });
+          }
+
+          return;
+        }
+
+        if (waitForDelivery) {
+          rejectOnce(error);
+          return;
+        }
+
+        logger.error({ attempts, err: error, phone }, 'Mensagem descartada apos falha de envio.');
       }
-    });
+    };
+
+    queue.add(job);
+
+    if (!waitForDelivery) {
+      resolveOnce({
+        attempts: 0,
+        queued: true,
+        sent: false,
+      });
+    }
   });
 }

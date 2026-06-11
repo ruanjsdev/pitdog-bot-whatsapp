@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'node:path';
 import { env } from '../config/env.js';
-import { getBotStatus } from '../bot/whatsapp.js';
+import { enqueueMessage, getBotStatus } from '../bot/whatsapp.js';
 import { notifyOrderEvent } from '../orders/notifyOrder.js';
 import { normalizeOrderEvent } from '../orders/events.js';
 import { createOrder, listOrders, updateOrderStatus } from '../orders/store.js';
@@ -91,6 +91,29 @@ export function createHttpServer() {
   app.post('/events/order/status', requireApiToken, handleOrderEvent);
 
   app.post('/api/notify-order', requireAdminPin, handleOrderEvent);
+
+  app.post('/api/test-message', requireAdminPin, async (req, res) => {
+    try {
+      const phone = req.body.phone || req.body.telefone || req.body.customerPhone;
+      const message = String(req.body.message || 'Teste do bot WhatsApp do Pits Dog. Se recebeu esta mensagem, o envio esta funcionando.').trim();
+
+      if (!phone) {
+        throw new Error('Telefone obrigatorio para testar o envio.');
+      }
+
+      await enqueueMessage(phone, message);
+
+      res.json({
+        ok: true,
+        phone,
+      });
+    } catch (error) {
+      res.status(400).json({
+        ok: false,
+        error: error.message,
+      });
+    }
+  });
 
   app.get('/api/orders', requireAdminPin, async (_req, res) => {
     const orders = await listOrders();

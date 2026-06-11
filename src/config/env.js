@@ -8,6 +8,7 @@ export const env = {
   botName: process.env.PUBLIC_BOT_NAME || 'Pits Dog',
   countryCode: process.env.WHATSAPP_COUNTRY_CODE || '55',
   messageIntervalMs: Number(process.env.MESSAGE_INTERVAL_MS || 1200),
+  messageRetryMs: Number(process.env.MESSAGE_RETRY_MS || 5000),
   storePhone: process.env.STORE_PHONE || '',
   adminOrigins: (process.env.ADMIN_ORIGIN || '*')
     .split(',')
