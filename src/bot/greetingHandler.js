@@ -1,32 +1,104 @@
 import { getSettings } from '../config/settings.js';
 import { buildGreetingMessage } from '../orders/templates.js';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
-// Em produção, isso pode ser movido para um JSON para não perder ao reiniciar
-const lastGreetings = new Map(); 
+const greetingsPath = path.resolve('data', 'greetings.json');
+const lastGreetings = new Map();
+let greetingsLoaded = false;
+let saveGreetingQueue = Promise.resolve();
 
-export async function handleIncomingMessage(sock, m) {
-  if (!m.messages[0].message || m.messages[0].key.fromMe) return;
+function normalizeSender(sender = '') {
+  return sender
+    .replace(/:\d+@/, '@')
+    .replace(/@s\.whatsapp\.net$/, '@c.us')
+    .trim();
+}
 
-  const message = m.messages[0];
+async function loadGreetings() {
+  if (greetingsLoaded) return;
+
+  greetingsLoaded = true;
+
+  try {
+    const data = await fs.readFile(greetingsPath, 'utf-8');
+    const savedGreetings = JSON.parse(data);
+
+    Object.entries(savedGreetings).forEach(([sender, timestamp]) => {
+      const greetingTime = Number(timestamp);
+
+      if (Number.isFinite(greetingTime)) {
+        lastGreetings.set(normalizeSender(sender), greetingTime);
+      }
+    });
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      console.warn('[Bot] Nao foi possivel carregar historico de saudacoes.', error);
+    }
+  }
+}
+
+async function saveGreetings() {
+  const payload = Object.fromEntries(lastGreetings.entries());
+
+  saveGreetingQueue = saveGreetingQueue
+    .catch(() => undefined)
+    .then(async () => {
+      await fs.mkdir(path.dirname(greetingsPath), { recursive: true });
+      await fs.writeFile(greetingsPath, JSON.stringify(payload, null, 2));
+    })
+    .catch((error) => {
+      console.warn('[Bot] Nao foi possivel salvar historico de saudacoes.', error);
+    });
+
+  await saveGreetingQueue;
+}
+
+function pruneOldGreetings(now, cooldownMs) {
+  const maxAgeMs = Math.max(cooldownMs * 8, 24 * 60 * 60 * 1000);
+
+  for (const [sender, timestamp] of lastGreetings.entries()) {
+    if (now - timestamp > maxAgeMs) {
+      lastGreetings.delete(sender);
+    }
+  }
+}
+
+async function handleSingleIncomingMessage(sock, message) {
+  if (!message.message || message.key.fromMe) return;
+
   const sender = message.key.remoteJid;
-  
-  // Ignora grupos
-  if (sender.endsWith('@g.us')) return;
+
+  if (!sender || sender.endsWith('@g.us')) return;
 
   const settings = await getSettings();
   if (!settings.botActive) return;
 
   const now = Date.now();
-  const cooldownMs = settings.greetingCooldownHours * 60 * 60 * 1000;
-  const lastSeen = lastGreetings.get(sender) || 0;
+  const cooldownHours = Number(settings.greetingCooldownHours) || 3;
+  const cooldownMs = cooldownHours * 60 * 60 * 1000;
+  const normalizedSender = normalizeSender(sender);
+  const lastSeen = lastGreetings.get(normalizedSender) || 0;
 
-  if (now - lastSeen > cooldownMs) {
-    console.log(`[Bot] Enviando saudação para: ${sender}`);
-    
-    const greeting = await buildGreetingMessage();
-    await sock.sendMessage(sender, { text: greeting });
+  if (now - lastSeen < cooldownMs) {
+    console.log(`[Bot] Saudacao ignorada para ${normalizedSender}. Cooldown ativo.`);
+    return;
+  }
 
-    // Atualiza o tempo da última saudação enviada para este número
-    lastGreetings.set(sender, now);
+  lastGreetings.set(normalizedSender, now);
+  pruneOldGreetings(now, cooldownMs);
+  await saveGreetings();
+
+  console.log(`[Bot] Enviando saudação para: ${normalizedSender}`);
+
+  const greeting = await buildGreetingMessage();
+  await sock.sendMessage(sender, { text: greeting });
+}
+
+export async function handleIncomingMessage(sock, m) {
+  await loadGreetings();
+
+  for (const message of m.messages ?? []) {
+    await handleSingleIncomingMessage(sock, message);
   }
 }

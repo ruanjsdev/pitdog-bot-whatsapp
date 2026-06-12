@@ -7,7 +7,7 @@ const officialMenuLink = "https://pitsdog-cardapio-oficial.onrender.com";
 const defaultSettings = {
   greetingMessage: "🍟 *Bem-vindo ao Pits Dog!* 🍔\n\nOlá! Que bom ter você por aqui.\n\nPara agilizar seu atendimento, você pode dar uma olhada em nosso cardápio e fazer seu pedido diretamente por este link:\n📍 {{menu_link}}\n\nSe precisar de ajuda, é só chamar! 😉",
   menuLink: officialMenuLink,
-  greetingCooldownHours: 4,
+  greetingCooldownHours: 3,
   botActive: true,
   pixKey: "41172968000182",
   pixPaymentMessage: "💳 Pagamento via PIX\n\nRecebedor:\n{{pix_receiver}}\n\nNa próxima mensagem vou enviar somente a chave PIX para facilitar copiar e colar.",
