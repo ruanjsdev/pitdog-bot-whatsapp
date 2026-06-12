@@ -1,6 +1,16 @@
 import { ORDER_EVENTS } from './events.js';
 import { getSettings, formatGreeting } from '../config/settings.js';
 
+const orderMessageKeysByEvent = {
+  [ORDER_EVENTS.created]: 'created',
+  [ORDER_EVENTS.approved]: 'approved',
+  [ORDER_EVENTS.preparing]: 'preparing',
+  [ORDER_EVENTS.ready]: 'ready',
+  [ORDER_EVENTS.outForDelivery]: 'outForDelivery',
+  [ORDER_EVENTS.finished]: 'finished',
+  [ORDER_EVENTS.canceled]: 'canceled',
+};
+
 function formatMoney(value) {
   if (value === undefined || value === null || value === '') return null;
 
@@ -127,7 +137,8 @@ export async function buildOrderMessage(event, order) {
   const customerName = order.customerName ? `, ${order.customerName}` : '';
   const itemsSummary = buildItemsSummary(order);
   const totalLine = buildTotalLine(order);
-  const template = settings.orderMessages?.[event];
+  const messageKey = orderMessageKeysByEvent[event] || event;
+  const template = settings.orderMessages?.[messageKey] || settings.orderMessages?.[event];
 
   if (!template) return null;
 
