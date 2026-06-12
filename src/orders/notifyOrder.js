@@ -1,6 +1,7 @@
 import { enqueueMessage } from '../bot/whatsapp.js';
 import { buildOrderMessage, buildPixPaymentMessages, isPixOrder } from './templates.js';
 import { normalizeOrderEvent } from './events.js';
+import { env } from '../config/env.js';
 
 function normalizeOrder(order) {
   if (!order || typeof order !== 'object') return order;
@@ -27,9 +28,16 @@ export async function notifyOrderEvent(event, order) {
   }
 
   if (!normalizedOrder?.customerPhone) {
-    throw new Error('customerPhone/telefoneCliente e obrigatorio.');
+    return {
+      event: normalizedEvent,
+      originalEvent: event,
+      phone: null,
+      message: null,
+      queued: false,
+      skipped: true,
+      reason: 'Pedido sem telefone. Notificação por WhatsApp ignorada.',
+    };
   }
-
   const message = await buildOrderMessage(normalizedEvent, normalizedOrder, {
     botName: env.botName,
   });
