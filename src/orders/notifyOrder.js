@@ -1,4 +1,3 @@
-import { env } from '../config/env.js';
 import { enqueueMessage } from '../bot/whatsapp.js';
 import { buildOrderMessage, buildPixPaymentMessages, isPixOrder } from './templates.js';
 import { normalizeOrderEvent } from './events.js';
@@ -31,7 +30,7 @@ export async function notifyOrderEvent(event, order) {
     throw new Error('customerPhone/telefoneCliente e obrigatorio.');
   }
 
-  const message = buildOrderMessage(normalizedEvent, normalizedOrder, {
+  const message = await buildOrderMessage(normalizedEvent, normalizedOrder, {
     botName: env.botName,
   });
 

@@ -98,41 +98,42 @@ export async function buildPixPaymentMessages(order) {
 
   const receiver = String(settings.pixReceiverName || settings.botName || 'Pits Dog').trim();
   const total = formatMoney(order.total ?? order.valorTotal ?? order.totalValue);
+  const pixPaymentMessage = applyTemplate(settings.pixPaymentMessage, {
+    pix_receiver: receiver,
+    pix_key: pixKey,
+    total: total || '',
+  });
+  const pixProofMessage = applyTemplate(settings.pixProofMessage, {
+    pix_receiver: receiver,
+    pix_key: pixKey,
+    total: total || '',
+  });
 
   return [
-    `💳 Pagamento via PIX\n\nRecebedor:\n${receiver}\n\nNa próxima mensagem vou enviar somente a chave PIX para facilitar copiar e colar.`,
+    pixPaymentMessage,
     pixKey,
-    total ? `Valor do PIX: ${total}\n\nApós realizar o pagamento, envie o comprovante por aqui para o caixa conferir.` : 'Após realizar o pagamento, envie o comprovante por aqui para o caixa conferir.',
-  ];
+    [total ? `Valor do PIX: ${total}` : '', pixProofMessage].filter(Boolean).join('\n\n'),
+  ].filter(Boolean);
 }
 
-export function buildOrderMessage(event, order) {
+function applyTemplate(template = '', variables = {}) {
+  return String(template || '').replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) => {
+    return variables[key] ?? '';
+  });
+}
+
+export async function buildOrderMessage(event, order) {
+  const settings = await getSettings();
   const customerName = order.customerName ? `, ${order.customerName}` : '';
   const itemsSummary = buildItemsSummary(order);
   const totalLine = buildTotalLine(order);
+  const template = settings.orderMessages?.[event];
 
-  const messages = {
-    [ORDER_EVENTS.created]:
-      `🍔 Olá${customerName}! Recebemos seu pedido no Pits Dog.${itemsSummary}${totalLine}\n\n⏳ Seu pedido está aguardando análise e aprovação do caixa.\nAssim que for confirmado, avisamos por aqui. 😉`,
+  if (!template) return null;
 
-    [ORDER_EVENTS.approved]:
-      '✅ Seu pedido foi aprovado pelo caixa e já está em preparo!\n\nEstamos caprichando por aqui. Daqui a pouco avisaremos a próxima etapa.',
-
-    [ORDER_EVENTS.preparing]:
-      '👨‍🍳 Seu pedido está em preparo!\n\nAssim que avançar, avisamos por aqui.',
-
-    [ORDER_EVENTS.ready]:
-      '🍟 Seu pedido está pronto!\n\nPode retirar no balcão ou aguardar nossa equipe chamar, conforme combinado.',
-
-    [ORDER_EVENTS.outForDelivery]:
-      '🛵 Seu pedido saiu para entrega!\n\n📍 Fique atento no endereço informado, por gentileza.',
-
-    [ORDER_EVENTS.finished]:
-      '✅ Pedido entregue com sucesso!\n\n🍔 Obrigado por comprar no Pits Dog. Volte sempre! ❤️',
-
-    [ORDER_EVENTS.canceled]:
-      '❌ Seu pedido foi cancelado.\n\nCaso tenha alguma dúvida, fale com nosso atendimento.',
-  };
-
-  return messages[event];
+  return applyTemplate(template, {
+    customer_name: customerName,
+    items: itemsSummary,
+    total: totalLine,
+  });
 }
